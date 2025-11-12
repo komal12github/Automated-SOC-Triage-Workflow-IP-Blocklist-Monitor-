@@ -1,2 +1,2 @@
 # Automated-SOC-Triage-Workflow-IP-Blocklist-Monitor-
-Developed a low-code automation workflow in n8n to simulate a SOC triage process, ingesting and analyzing suspicious IP addresses.
+This project is a low-code automation workflow built in n8n that simulates a common Security Operations Center (SOC) task: triaging suspicious IP addresses against a local blocklist to reduce analyst alert fatigue.
