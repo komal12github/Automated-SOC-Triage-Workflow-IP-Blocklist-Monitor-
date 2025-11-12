@@ -1,0 +1,336 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2ebe69f9-0101-4168-bb0e-cc01f417bc91",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n { json: { ip: \"203.0.113.120\", source: \"Firewall\" } }, // Should be found on Blocklist (False alert)\n  { json: { ip: \"10.0.0.5\", source: \"Proxy Log\" } } // Should be NEW (True alert)\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "76724134-7e8c-45e7-adac-d035aa07cc85",
+      "name": "Suspicious IP Feed"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bBIJHpqQHykeLwK6-bCxapujn5qdWyYfGvioNmVw3GU",
+          "mode": "list",
+          "cachedResultName": "IP BlockList",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bBIJHpqQHykeLwK6-bCxapujn5qdWyYfGvioNmVw3GU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bBIJHpqQHykeLwK6-bCxapujn5qdWyYfGvioNmVw3GU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "BlockedIP",
+              "lookupValue": "={{$json[\"original_ip\"]}}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        0
+      ],
+      "id": "5d7853ee-4222-4b49-aa85-a57d93580656",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6f7mvQgBOn62ncoD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "77fe5fa8-e1f4-4f1b-990b-81670c842d8b",
+              "leftValue": "={{ $json.BlockedIP }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "42547fa3-97cc-4f2e-a7cd-f8b8e4e604e6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// The $json here is just {}, so we ignore it.\n// We will get the data from the 'Edit Fields' node\n// using the item's index.\n\nconst items = $input.all();\nconst editFieldsItems = $items(\"Edit Fields\");\n\nreturn items.map((_, idx) => {\n  const originalData = editFieldsItems[idx].json;\n  return {\n    json: {\n      ip: originalData.original_ip,\n      status: \"NEWLY DETECTED\",\n      date: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        -192
+      ],
+      "id": "19d0be78-6d9e-4a63-bed8-94931e8caac2",
+      "name": "Format Alert Payload"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1d-sCosXQqwslIxAmCRmgA6LLrSTlJrvgqbCvVi-66rk",
+          "mode": "list",
+          "cachedResultName": "IPAlertsLog",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-sCosXQqwslIxAmCRmgA6LLrSTlJrvgqbCvVi-66rk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1d-sCosXQqwslIxAmCRmgA6LLrSTlJrvgqbCvVi-66rk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Date": "={{$json[\"date\"]}}",
+            "NewIP": "={{$json[\"ip\"]}}",
+            "Status": "={{$json[\"status\"]}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NewIP",
+              "displayName": "NewIP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1216,
+        -192
+      ],
+      "id": "9ec03c2a-81d7-4e2e-abba-72af17eb4538",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6f7mvQgBOn62ncoD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://webhook.site/de6c758a-33d9-4948-b4d6-412da00ef456",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{JSON.stringify($json)}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1408,
+        -192
+      ],
+      "id": "be6410e1-042e-4d41-aa46-9827dc3998b7",
+      "name": "Send Webhook Alert",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "20a86e27-abb9-4432-b75a-6e8d75f5699b",
+              "name": "original_ip",
+              "value": "={{ $json.ip }}",
+              "type": "string"
+            },
+            {
+              "id": "ad82c174-2743-4e7f-86b4-011756c0f158",
+              "name": "original_source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "2f232530-a66b-47fb-8940-8204d334eda5",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Suspicious IP Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Suspicious IP Feed": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Format Alert Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Format Alert Payload": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send Webhook Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f585ed5d-31fc-4fcc-89f2-b73ae7f0c9f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9733952efdbce7b40e1e6e284e45cc2db7ca1e49c949ce1c929fdbf6a69550bf"
+  },
+  "id": "5J6RNsLEyj1TsCdX",
+  "tags": []
+}
