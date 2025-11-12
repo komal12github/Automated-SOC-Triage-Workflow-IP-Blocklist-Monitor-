@@ -1,4 +1,4 @@
-<img width="1920" height="1200" alt="Screenshot (289)" src="https://github.com/user-attachments/assets/772aaf0a-4556-4244-a95b-ba6469a1eef3" /># Automated IP Blocklist Monitor (n8n)
+# Automated IP Blocklist Monitor (n8n)
 This project is a low-code automation workflow built in n8n that simulates a common Security Operations Center (SOC) task: triaging suspicious IP addresses against a local blocklist to reduce analyst alert fatigue.
 #The Problem & Solution
 In a SOC, analysts are often flooded with thousands of alerts, many of which are duplicates or known threats. This workflow automatically:
@@ -19,5 +19,7 @@ In a SOC, analysts are often flooded with thousands of alerts, many of which are
 
 Workflow Diagram
 Here is the complete, final workflow diagram from the n8n canvas.
+
+<img width="1910" height="921" alt="Screenshot 2025-11-12 205457" src="https://github.com/user-attachments/assets/a95b4803-c8b8-4b3d-9e06-5c66505804ac" />
 
 
